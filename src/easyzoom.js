@@ -34,8 +34,10 @@
         onHide: $.noop,
 
         // Callback function to execute when the cursor is moved while over the image.
-        onMove: $.noop
+        onMove: $.noop,
 
+        // Type of event that triggers the zoom. Options: mouseenter | click. Default: mouseenter
+        eventType: 'mouseenter'
     };
 
     /**
@@ -58,15 +60,34 @@
     EasyZoom.prototype._init = function() {
         this.$link   = this.$target.find('a');
         this.$image  = this.$target.find('img');
+        this.$initializeEventTimestamp = new Event('easyzoom-initialized').timeStamp;
 
         this.$flyout = $('<div class="easyzoom-flyout" />');
         this.$notice = $('<div class="easyzoom-notice" />');
 
         this.$target.on({
-            'mousemove.easyzoom touchmove.easyzoom': $.proxy(this._onMove, this),
-            'mouseleave.easyzoom touchend.easyzoom': $.proxy(this._onLeave, this),
-            'mouseenter.easyzoom touchstart.easyzoom': $.proxy(this._onEnter, this)
+            'mousemove.easyzoom touchmove.easyzoom': $.proxy(this._onMove, this)
         });
+
+        if (this.opts.eventType === 'click') {
+            this.$flyout.on({
+                'mousedown.easyzoom touchstart.easyzoom': $.proxy(this._onToggle, this)
+            });
+            this.$image.on({
+                'mousedown.easyzoom touchstart.easyzoom': $.proxy(this._onToggle, this)
+            });
+            this.$flyout.on({
+                'touchend.easyzoom': $.proxy(this._onLeave, this)
+            });
+            this.$image.on({
+                'touchend.easyzoom': $.proxy(this._onLeave, this)
+            });
+        } else {
+            this.$target.on({
+                'mousemove.easyzoom touchstart.easyzoom': $.proxy(this._onEnter, this),
+                'mouseleave.easyzoom touchend.easyzoom': $.proxy(this._onLeave, this)
+            });
+        }
 
         this.opts.preventClicks && this.$target.on('click.easyzoom', function(e) {
             e.preventDefault();
@@ -103,6 +124,16 @@
         dw = this.$zoom.width() - w2;
         dh = this.$zoom.height() - h2;
 
+        // For the case where the zoom image is actually smaller than the flyout.
+        if (dw < 0) {
+            dw = 0;
+            this.$flyout.addClass('narrow');
+        }
+        if (dh < 0) {
+            dh = 0;
+            this.$flyout.addClass('short');
+        }
+
         rw = dw / w1;
         rh = dh / h1;
 
@@ -111,6 +142,23 @@
         this.opts.onShow.call(this);
 
         e && this._move(e);
+    };
+
+    /**
+     * On toggle
+     * @private
+     * @param {Event} e
+     */
+    EasyZoom.prototype._onToggle = function(e) {
+        // only respond to events initiated after EasyZoom initialized
+        if ( this.$initializeEventTimestamp > e.timeStamp ) {
+            return;
+        }
+        if (this.isOpen) {
+            this._onLeave();
+        } else {
+            this._onEnter(e);
+        }
     };
 
     /**
