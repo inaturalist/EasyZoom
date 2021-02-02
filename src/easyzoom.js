@@ -70,17 +70,13 @@
         });
 
         if (this.opts.eventType === 'click') {
+            // Clicking the flyout should stop zooming
             this.$flyout.on({
-                'mousedown.easyzoom touchstart.easyzoom': $.proxy(this._onToggle, this)
+                'mousedown.easyzoom touchstart.easyzoom': $.proxy(this._onLeave, this)
             });
+            // Clicking the image commences zooming
             this.$image.on({
-                'mousedown.easyzoom touchstart.easyzoom': $.proxy(this._onToggle, this)
-            });
-            this.$flyout.on({
-                'touchend.easyzoom': $.proxy(this._onLeave, this)
-            });
-            this.$image.on({
-                'touchend.easyzoom': $.proxy(this._onLeave, this)
+                'mousedown.easyzoom touchstart.easyzoom': $.proxy(this._onEnter, this)
             });
         } else {
             this.$target.on({
@@ -142,23 +138,6 @@
         this.opts.onShow.call(this);
 
         e && this._move(e);
-    };
-
-    /**
-     * On toggle
-     * @private
-     * @param {Event} e
-     */
-    EasyZoom.prototype._onToggle = function(e) {
-        // only respond to events initiated after EasyZoom initialized
-        if ( this.$initializeEventTimestamp > e.timeStamp ) {
-            return;
-        }
-        if (this.isOpen) {
-            this._onLeave();
-        } else {
-            this._onEnter(e);
-        }
     };
 
     /**
