@@ -95,12 +95,12 @@
      * @param {MouseEvent|TouchEvent} e
      * @param {Boolean} testMouseOver (Optional)
      */
-    EasyZoom.prototype.show = function(e, testMouseOver) {        
+    EasyZoom.prototype.show = function(e, testMouseOver) {
         var w1, h1, w2, h2, dw, dh;
         var self = this;
-    
+
         if (this.opts.beforeShow.call(this) === false) return;
-    
+
         if (!this.isReady) {
             return this._loadImage(this.$link.attr(this.opts.linkAttribute), function() {
                 if (self.isMouseOver || !testMouseOver) {
@@ -108,15 +108,15 @@
                 }
             });
         }
-    
+
         this.$target.append(this.$flyout);
-    
+
         w1 = this.$target.width();
         h1 = this.$target.height();
 
         w2 = this.$flyout.width();
         h2 = this.$flyout.height();
-    
+
         dw = this.$zoom.width() - w2;
         dh = this.$zoom.height() - h2;
 
