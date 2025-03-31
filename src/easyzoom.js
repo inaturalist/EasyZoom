@@ -96,7 +96,7 @@
      * @param {Boolean} testMouseOver (Optional)
      */
     EasyZoom.prototype.show = function(e, testMouseOver) {
-        var w1, h1, w2, h2;
+        var w1, h1, w2, h2, dw, dh;
         var self = this;
 
         if (this.opts.beforeShow.call(this) === false) return;
@@ -129,15 +129,28 @@
             dh = 0;
             this.$flyout.addClass('short');
         }
+    
+        // Recalculate dw and dh after applying the .narrow and .short classes,
+        // as these may alter the layout. Waiting one animation frame ensures that
+        // style changes are reflected in the DOM, allowing us to compute accurate zoom ratios.
+        requestAnimationFrame(function () {
+            var finalZoomW = self.$zoom[0].offsetWidth;
+            var finalZoomH = self.$zoom[0].offsetHeight;
+            var finalFlyoutW = self.$flyout[0].offsetWidth;
+            var finalFlyoutH = self.$flyout[0].offsetHeight;
+    
+            var finalDw = Math.max(0, finalZoomW - finalFlyoutW);
+            var finalDh = Math.max(0, finalZoomH - finalFlyoutH);
+    
+            rw = finalDw / w1;
+            rh = finalDh / h1;
+    
+            self.isOpen = true;
 
-        rw = dw / w1;
-        rh = dh / h1;
+            self.opts.onShow.call(self);
 
-        this.isOpen = true;
-
-        this.opts.onShow.call(this);
-
-        e && this._move(e);
+            e && self._move(e);
+        });
     };
 
     /**
